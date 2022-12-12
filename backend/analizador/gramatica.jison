@@ -3,62 +3,86 @@
  */
 
 /* Definición Léxica */
+
 %lex
-
 %options case-insensitive
-
 %%
 
-"Evaluar"           return 'REVALUAR';
-";"                 return 'PTCOMA';
-"("                 return 'PARIZQ';
-")"                 return 'PARDER';
-"["                 return 'CORIZQ';
-"]"                 return 'CORDER';
-
-"+"                 return 'MAS';
-"-"                 return 'MENOS';
-"*"                 return 'POR';
-"/"                 return 'DIVIDIDO';
 
 
-//Reservadas
-"null"                  return 'resnull';
-"integer"               return 'resinteger';
-"double"                return 'resdouble';
-"char"                  return 'reschar';
+[\n\t\s\r]+                             {} // Espacios en blanco
+"//".*                                  {} // Comentario de una linea // 
+[/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]     {} // Comentario multilinea
+
+//Reservadas res == reservada
+"int"					return 'int';
+"double"                return 'double';
+"char"                  return 'char';
+"bool"                  return 'bool';
 "string"                return 'resstring';
-"true"                  return 'restrue';
-"false"                 return 'resfalse';
-"if"                    return 'resif';
-"else"                  return 'reselse';
-"print"                 return 'resprint';
-"for"                   return 'resfor';
-"while"                 return 'reswhile';
-"do"                    return 'resdo';
-"boolean"               return 'resboolean';
-"void"                  return 'resvoid';
+"void"                  return 'void';
 
+"null"                  return 'null';
+"integer"               return 'integer';
+
+"true"                  return 'true';
+"false"                 return 'false';
+
+"if"                    return 'if';
+"else"                  return 'else';
+"switch"                return 'switch'
+"for"                   return 'for';
+"while"                 return 'while';
+"do"                    return 'do';
+"console.write"         return 'imprimir';
+"return"                return 'return';
+"continue"				return 'continue'
+
+"+"                     return 'mas';
+"-"                     return 'menos';
+"*"                     return 'por';
+"/"                     return 'dividido';
+
+"&&"                    return 'and'
+"||"					return 'or'
+"!"						return 'not'
+">"						return 'mayor'
+"<"						return 'menor'
+">="					return 'mayorigual'
+"<="					return 'menorigual'
+"=="					return 'igualigual'
+"!="					return 'diferente'
 
 //simbolos
-"{"              return 'corchetea';     
-"}"              return 'corchetec';
-"("              return 'parenta';     
-")"              return 'parentc';
+"{"              return 'llaveaper';     
+"}"              return 'llavecierre';
+"("              return 'parentesisaper';     
+")"              return 'parentesiscierre';
 ","              return 'coma';
 "."              return 'punto';
 "="              return 'igual';
+";"			     return 'puntocoma'
 
-
-([a-zA-Z"_"])[a-z0-9A-Z"_""ñ""Ñ"]*       return 'id';
 
 
 /* Espacios en blanco */
-[ \r\t]+                  {}
-\n                        {}
 
-[0-9]+("."[0-9]+)?\b    return 'DECIMAL';
-[0-9]+\b                return 'ENTERO';
+
+([a-zA-Z_])[a-z0-9A-Z_ñÑ]*       return 'id';
+[0-9]+("."[0-9]+)\b         return 'decimal'
+[0-9]+\b                    return 'entero'
+
+\'((\\\')|[^\n\'])\'	{ yytext = yytext.substr(1,yyleng-2); return 'caracter'; }
+
+[\"]("\\n"|"\\r"|"\\t"|"\\'"|"\\\""|"\\\\"|[^\"])*[\"]   {yytext = yytext.substring(1,yytext.length-1) 
+                                                         yytext = yytext.replace(/\\n/g, '\n')
+                                                         yytext = yytext.replace(/\\r/g, '\r')
+                                                         yytext = yytext.replace(/\\t/g, '\t')
+                                                         yytext = yytext.replace(/\\\'/g, '\'')
+                                                         //yytext = yytext.replace(/\\\"/g, '\"')
+                                                         //yytext = yytext.replace(/\\\\/g, '\\')
+                                                         return'cadena';}  
+
 
 <<EOF>>                 return 'EOF';
 
@@ -78,16 +102,16 @@
 
 /* Asociación de operadores y precedencia */
 
-%left 'MAS' 'MENOS'
-%left 'POR' 'DIVIDIDO'
-%left UMENOS
+%left 'mas' 'menos'
+%left 'por' 'dividido'
+%left uMenos
 
-%start ini
+%start INI
 
 %% /* Definición de la gramática */
 
-ini
-	: instrucciones EOF {
+INI
+	: INSTRUCCIONES EOF {
 		
 		  for(var i = 0; i< $1.length; i++){
             if($1[i])
@@ -95,43 +119,84 @@ ini
         }
 
 		return reportes;
-	}
+	}	
 ;
 
-instrucciones
-	: instrucciones  instruccion  {$$ = $1; $$.push($2);}
-	| instruccion  {$$ = []; $$.push($1)}
-	| error instruccion { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+INSTRUCCIONES
+	: INSTRUCCIONES INSTRUCCION  {$$ = $1; $$.push($2);}
+	| INSTRUCCION  {$$ = []; $$.push($1)}
+	| error { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
 			  reportes.putError_sintactico({lexema:yytext, fila: this._$.first_line, columna:this._$.first_column })
-			}
+			}	
 ;
 
-instruccion
-	: DECLARACION PTCOMA  {  console.log("Paso a aqui 2", $1); if($1 != null){$$ = $1}}
-	// | REVALUAR CORIZQ expresion CORDER PTCOMA {
-	// 	console.log('El valor de la expresión es: ' + $3);
-	// }
+INSTRUCCION
+	: DECLARACION_VAR  puntocoma {  console.log("Paso a aqui 2", $1); if($1 != null){$$ = $1}}
+	| DECLARACION_FUNCION puntocoma {if($1 != null){$$ = $1}}
+	| DECLARACION_METODO 
+	| IF 
+	| SWITCH 
+	| FOR 
+	| WHILE 
+	| DOWHILE
+	| PRINT 
+	| RETURN 
+	|
+	 
+
+
 ;
 
-DECLARACION
-     : TYPE id igual expresion { console.log("Paso a aqui", $1); $$ = new Declaracion($2,$1,Type.VARIABLE,Type.VARIABLE, 'RESOLVER EXPRESION' ,this._$.first_line,this._$.first_column);}
+DECLARACION_VAR
+     : TYPE id igual EXPRESION  { console.log("Paso a aqui", $1); $$ = new Declaracion($2,$1,Type.VARIABLE,Type.VARIABLE, $4 ,this._$.first_line,this._$.first_column);}
+	 | TYPE id coma DECLARACION_VAR 
+	 | TYPE id 
 ;
 
-expresion
-	: MENOS expresion %prec UMENOS  { $$ = $2 *-1; }
-	| expresion MAS expresion       { $$ = $1 + $3; }
-	| expresion MENOS expresion     { $$ = $1 - $3; }
-	| expresion POR expresion       { $$ = $1 * $3; }
-	| expresion DIVIDIDO expresion  { $$ = $1 / $3; }
-	| ENTERO                        { $$ = Number($1); }
-	| DECIMAL                       { $$ = Number($1); }
-	| PARIZQ expresion PARDER       { $$ = $2; }
+DECLARACION_FUNCION
+	: TIPO id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre
+	| TIPO id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre
+;
+
+DECLARACION_METODO 
+	: void id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre
+	| void id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre
+
+PARAMETROS
+: PARAMETROS coma PARAMETROS
+|PARAMETROS
+;
+
+PARAMETRO 
+: TIPO id 
+;
+
+
+
+
+
+
+
+EXPRESION
+	: menos EXPRESION %prec uMenos  { $$ = $2 *-1; }
+	| EXPRESION mas EXPRESION       { $$ = $1 + "+" +  $3; }
+	| EXPRESION menos EXPRESION     { $$ = $1 + "-" + $3; }
+	| EXPRESION por EXPRESION       { $$ = $1 + "*" + $3; }
+	| EXPRESION dividido EXPRESION  { $$ = + $1 + "/" + $3; }
+	| cadena						{ console.log("asdfasdf", $1); $$ = $1; }
+	| entero                        { $$ = Number($1); }
+	| decimal                       { $$ = Number($1); }
+	| true							{ console.log("asdfasdf", $1); $$ = $1 }
+	| false							{ $$ = $1; }
+	| caracter 						{ $$ = $1; }
+	| parentesisaper EXPRESION parentesiscierre       { $$ = $2; }
 ;
 
 
 TYPE
-     : resinteger {$$ = Type.ENTERO}
-     | resdouble {$$ = Type.DOUBLE}
-     | resboolean {$$ = Type.BOOLEANO}
-     | resstring {$$ = Type.STRING}
+     :int     {$$ = Type.ENTERO}
+     | double {$$ = Type.DOUBLE}
+     | bool   {$$ = Type.BOOLEANO}
+     | resstring {console.log("reconociendo string", $1); $$ = Type.CADENA}
+	 | char   {$$ = Type.CARACTER}
 ;
