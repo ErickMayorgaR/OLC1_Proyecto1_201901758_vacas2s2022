@@ -52,6 +52,8 @@
 "<="					return 'menorigual'
 "=="					return 'igualigual'
 "!="					return 'diferente'
+"++"					return 'masmas'
+"--"					return 'menosmenos'
 
 //simbolos
 "{"              return 'llaveaper';     
@@ -62,6 +64,7 @@
 "."              return 'punto';
 "="              return 'igual';
 ";"			     return 'puntocoma'
+":"				 return 'dospuntos'
 
 
 
@@ -133,18 +136,16 @@ INSTRUCCIONES
 INSTRUCCION
 	: DECLARACION_VAR  puntocoma {  console.log("Paso a aqui 2", $1); if($1 != null){$$ = $1}}
 	| DECLARACION_FUNCION puntocoma {if($1 != null){$$ = $1}}
-	| DECLARACION_METODO 
-	| IF 
-	| SWITCH 
-	| FOR 
-	| WHILE 
-	| DOWHILE
-	| PRINT 
-	| RETURN 
-	|
-	 
-
-
+	| DECLARACION_METODO puntocoma
+	| ASIGNACIONVAR puntocoma
+	| IF puntocoma
+	| SWITCH puntocoma
+	| FOR puntocoma
+	| WHILE puntocoma
+	| PRINT puntocoma
+	| RETURN puntocoma
+	| BREAK puntocoma
+	| CONTINUE puntocoma
 ;
 
 DECLARACION_VAR
@@ -153,14 +154,119 @@ DECLARACION_VAR
 	 | TYPE id 
 ;
 
+ASIGNACIONVAR 
+: id igual EXPRESION
+;
+
 DECLARACION_FUNCION
-	: TIPO id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre
-	| TIPO id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre
+	: TYPE id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre
+	| TYPE id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre
 ;
 
 DECLARACION_METODO 
 	: void id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre
 	| void id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre
+	;
+// if
+IF 
+ : INS_IF
+ | INS_IF ELSE 
+ | INS_IF MULTI_ELSE ELSE 
+ ;
+
+ INS_IF 
+ : if parentesisaper EXPRESION parentesiscierre llaveaper INSTRUCCIONES llavecierre
+ | if parentesisaper EXPRESION parentesiscierre llaveaper llavecierre
+ ;
+
+ ELSE
+ : else llaveaper INSTRUCCIONES llavecierre
+ | else llaveaper llavecierre
+ ;
+
+MULTI_ELSE 
+ : MULTI_ELSE ELSE
+ | ELSE
+ ;
+
+// switch 
+SWITCH 
+: switch parentesisaper EXPRESION parentesiscierre llaveaper SWITCHCASES llavecierre
+;
+
+SWITCHCASES 
+: CASES DEFAULT
+| CASES 
+| DEFAULT
+;
+
+CASES 
+: CASES CASE 
+| CASE
+;
+
+CASE 
+: case EXPRESION dospuntos INSTRUCCIONES
+;
+
+DEFAULT
+: default dospuntos INSTRUCCIONES
+;
+//FOR
+FOR 
+:parentesisaper INICIOFOR puntocoma EXPRESION puntocoma ACTUALIZACIONFOR parentesiscierre llaveaper INSTRUCCIONES llavecierre 
+;
+
+INICIOFOR 
+: DECLARACION_VAR
+| ASIGNACIONVAR
+;
+
+ACTUALIZACIONFOR 
+: ACTUALIZACION
+| ASIGNACIONVAR
+;
+//WHILE 
+
+WHILE
+: WHILESIMPLE llaveaper INSTRUCCIONES llavecierre
+| do llaveaper INSTRUCCIONES llavecierre WHILESIMPLE
+;
+
+WHILESIMPLE
+: while parentesisaper EXPRESION parentesiscierre llaveaper 
+
+ACTUALIZACION 
+: id masmas
+| id menosmenos
+;
+
+
+//print 
+
+PRINT
+: imprimir parentesisaper cadena parentesiscierre
+;
+
+//return 
+
+RETURN 
+: return EXPRESION
+| return
+;
+
+//break
+
+BREAK 
+: break
+;
+
+//continue
+
+CONTINUE
+: continue
+;
+
 
 PARAMETROS
 : PARAMETROS coma PARAMETROS
@@ -168,13 +274,8 @@ PARAMETROS
 ;
 
 PARAMETRO 
-: TIPO id 
+: TYPE id 
 ;
-
-
-
-
-
 
 
 EXPRESION
