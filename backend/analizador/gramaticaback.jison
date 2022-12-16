@@ -93,7 +93,6 @@
 /lex
 
 %{
-	const TraducirAPython = require('./TraducirAPython.js')
 	const Reportes = require('./reportes.js');
 	const Declaracion = require('./Declaracion.js');
 	const SymbolTable = require('./tabla_simbolos.js');
@@ -101,9 +100,6 @@
 	var reportes = new Reportes();
 	var tabla_simbolo = new SymbolTable(null);
 	tabla_simbolo.reportes = reportes;
-
-	var instrucciones = [];
-	var traducir = new TraducirAPython();
 
 %}
 
@@ -119,77 +115,82 @@
 
 INI
 	: INSTRUCCIONES EOF {
-		instrucciones = $1; 
-		return instrucciones;
+		
+		  for(var i = 0; i< $1.length; i++){
+            if($1[i])
+                $1[i].operar(tabla_simbolo, reportes)
+        }
+
+		return reportes;
 	}	
 ;
 
 INSTRUCCIONES
 	: INSTRUCCIONES INSTRUCCION  {$$ = $1; $$.push($2);}
-	| INSTRUCCION  {$$ = [$1];}
+	| INSTRUCCION  {$$ = []; $$.push($1)}
 	| error { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
 			  reportes.putError_sintactico({lexema:yytext, fila: this._$.first_line, columna:this._$.first_column })
 			}	
 ;
 
 INSTRUCCION
-	: DECLARACION_VAR  puntocoma 	{$$ = $1;}
-	| DECLARACION_FUNCION 			{$$ = $1;}
-	| DECLARACION_METODO 			{$$ = $1;}
-	| ASIGNACIONVAR puntocoma 		{$$ = $1;}
-	| IF   							{$$ = $1;}
-	| SWITCH      					{$$ = $1;}
-	| FOR  							{$$ = $1;}
-	| WHILE  						{$$ = $1;}
-	| PRINT puntocoma 				{$$ = $1;}
-	| RETURN puntocoma 				{$$ = $1;}
-	| BREAK puntocoma 				{$$ = $1;}
-	| CONTINUE puntocoma			{$$ = $1;}
+	: DECLARACION_VAR  puntocoma {  console.log("Paso a aqui 2", $1); if($1 != null){$$ = $1}}
+	| DECLARACION_FUNCION puntocoma {if($1 != null){$$ = $1}}
+	| DECLARACION_METODO puntocoma {}
+	| ASIGNACIONVAR puntocoma {}
+	| IF puntocoma  {}
+	| SWITCH puntocoma {}
+	| FOR puntocoma {}
+	| WHILE puntocoma {}
+	| PRINT puntocoma {}
+	| RETURN puntocoma {}
+	| BREAK puntocoma {}
+	| CONTINUE puntocoma {}
 ;
 
 DECLARACION_VAR
-     : TYPE id igual EXPRESION  		{$$ = $2 +  $3 + $4 ;}
-	 | TYPE id coma DECLARACION_VAR 	{ $$ = $2 +  $3 + $4 ;} // falta colocar comillas o caracteres si es el tipo de caracter e identacion	 
-	 | TYPE id 							{$$ = $2 + " = " + "null" ;}
+     : TYPE id igual EXPRESION  { console.log("Paso a aqui", $1); $$ = new Declaracion($2,$1,Type.VARIABLE,Type.VARIABLE, $4 ,this._$.first_line,this._$.first_column);}
+	 | TYPE id coma DECLARACION_VAR {}
+	 | TYPE id {}
 ;
 
 ASIGNACIONVAR 
-: id igual EXPRESION {$$ = $1 +  $2 + $3 ;}
+: id igual EXPRESION {}
 ;
 
 DECLARACION_FUNCION
-	: TYPE id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre			 {$$ = traducir.funcionYMetodoVacio($2, $6);}
-	| TYPE id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre {$$ = traducir.funcionYMetodo($2,$4, $7);}
+	: TYPE id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
+	| TYPE id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
 ;
 
-
 DECLARACION_METODO 
-	: void id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre			 {$$ = traducir.funcionYMetodoVacio($2, $6);}
-	| void id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre {$$ = traducir.funcionYMetodo($2,$4, $7);}
+	: void id parentesisaper parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
+	| void id parentesisaper PARAMETROS parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
 ;
 
 // if
 IF 
- : INS_IF {$$ = $1}
- | INS_IF ELSE {$$ = $1 + $2}
- | INS_IF MULTI_ELSE ELSE  {$$ = $1 + $2 + $3}
+ : INS_IF {}
+ | INS_IF ELSE {}
+ | INS_IF MULTI_ELSE ELSE  {}
  ;
 
  INS_IF 
- : if parentesisaper EXPRESION parentesiscierre llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaIf($3, $6);}
+ : if parentesisaper EXPRESION parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
+ | if parentesisaper EXPRESION parentesiscierre llaveaper llavecierre {}
  ;
 
  ELSE
- : else llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "else:");}
- | else if llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "elif:");}
+ : else llaveaper INSTRUCCIONES llavecierre {}
+ | else llaveaper llavecierre {}
  ;
 
 MULTI_ELSE 
- : MULTI_ELSE ELSE { $$ = $1 + $2}
- | ELSE 		   { $$ = $1}
+ : MULTI_ELSE ELSE {}
+ | ELSE {}
  ;
 
- // switch 
+// switch 
 SWITCH 
 : switch parentesisaper EXPRESION parentesiscierre llaveaper SWITCHCASES llavecierre {}
 ;
@@ -217,7 +218,6 @@ FOR
 :parentesisaper INICIOFOR puntocoma EXPRESION puntocoma ACTUALIZACIONFOR parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
 ;
 
-
 INICIOFOR  
 : DECLARACION_VAR {}
 | ASIGNACIONVAR {}
@@ -227,14 +227,15 @@ ACTUALIZACIONFOR
 : ACTUALIZACION {}
 | ASIGNACIONVAR {}
 ;
-
 //WHILE 
 
 WHILE
-: while parentesisaper EXPRESION parentesiscierre llaveaper INSTRUCCIONES llavecierre {}
-| do llaveaper INSTRUCCIONES llavecierre while parentesisaper EXPRESION parentesiscierre {}
+: WHILESIMPLE llaveaper INSTRUCCIONES llavecierre {}
+| do llaveaper INSTRUCCIONES llavecierre WHILESIMPLE {}
 ;
 
+WHILESIMPLE
+: while parentesisaper EXPRESION parentesiscierre llaveaper {}
 
 ACTUALIZACION 
 : id masmas {}
@@ -248,52 +249,50 @@ PRINT
 //return 
 
 RETURN 
-: return EXPRESION {$$ = $1 + " " + $2}
-| return {$$ = $1}
+: return EXPRESION {}
+| return {}
 ; 
 
 //break
 
 BREAK 
-: break {$$ = $1}
+: break {}
 ;
 
 //continue
 
 CONTINUE
-: continue {$$ = $1}
+: continue {}
 ;
 
 PARAMETROS
-: PARAMETROS coma PARAMETRO { $$ = $1 + $2 + $3}
-|PARAMETRO {$$ = $1}
+: PARAMETROS coma PARAMETROS {}
+|PARAMETROS {}
 ;
 
 PARAMETRO 
-: TYPE id { $$ = $2}
+: TYPE id {}
 ;
-
-
 
 EXPRESION
 	: menos EXPRESION %prec uMenos  { $$ = $2 *-1; }
-	| EXPRESION mas EXPRESION       { $$ = $1 + " + " +  $3; }
-	| EXPRESION menos EXPRESION     { $$ = $1 + " - " + $3; }
-	| EXPRESION por EXPRESION       { $$ = $1 + " * " + $3; }
-	| EXPRESION dividido EXPRESION  { $$ = + $1 + " / " + $3; }
-	| cadena						{ $$ = '"' + $1 + '"'; }
+	| EXPRESION mas EXPRESION       { $$ = $1 + "+" +  $3; }
+	| EXPRESION menos EXPRESION     { $$ = $1 + "-" + $3; }
+	| EXPRESION por EXPRESION       { $$ = $1 + "*" + $3; }
+	| EXPRESION dividido EXPRESION  { $$ = + $1 + "/" + $3; }
+	| cadena						{ console.log("asdfasdf", $1); $$ = $1; }
 	| entero                        { $$ = Number($1); }
 	| decimal                       { $$ = Number($1); }
-	| true							{ $$ = $1 }
+	| true							{ console.log("asdfasdf", $1); $$ = $1 }
 	| false							{ $$ = $1; }
-	| caracter 						{$$ = "'" + $1 + "'"; }
+	| caracter 						{ $$ = $1; }
 	| parentesisaper EXPRESION parentesiscierre       { $$ = $2; }
 ;
 
 TYPE
-     :int     {console.log("reconociendo string", $1); $$ = Type.ENTERO}
+     :int     {$$ = Type.ENTERO}
      | double {$$ = Type.DOUBLE}
      | bool   {$$ = Type.BOOLEANO}
-     | resstring {$$ = Type.CADENA}
+     | resstring {console.log("reconociendo string", $1); $$ = Type.CADENA}
 	 | char   {$$ = Type.CARACTER}
 ;
