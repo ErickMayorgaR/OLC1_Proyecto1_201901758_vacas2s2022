@@ -31,9 +31,6 @@
 [/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]     {} // Comentario multilinea
 
 //Reservadas res == reservada
-
-"++"					return 'incremento'
-"--"					return 'reduccion'
 "int"					return 'int';
 "double"                return 'double';
 "char"                  return 'char';
@@ -47,7 +44,7 @@
 "true"                  return 'true';
 "false"                 return 'false';
 
-"if"                    return 'if_sen';
+"if"                    return 'if';
 "else"                  return 'else';
 "switch"                return 'switch'
 "for"                   return 'for';
@@ -55,10 +52,7 @@
 "do"                    return 'do';
 "Console.Write"         return 'imprimir';
 "return"                return 'return';
-"continue"				return 'continue';
-"case"					return "case"
-"default"				return "default"
-"break"					return "break"
+"continue"				return 'continue'
 
 "+"                     return 'mas';
 "-"                     return 'menos';
@@ -74,7 +68,8 @@
 "<="					return 'menorigual'
 "=="					return 'igualigual'
 "!="					return 'diferente'
-
+"++"					return 'masmas'
+"--"					return 'menosmenos'
 
 //simbolos
 "{"              return 'llaveaper';     
@@ -119,12 +114,9 @@
 
 
 %left 'entero' 'caracter' 'decimal'
-%left 'or'
-%left 'and'
-%left 'por' 'dividido' 
+%left 'mas' 'menos' 'true' 'false'
+%left 'por' 'dividido' 'and' 'or'
 %left 'igualigual' 'menor' 'menorigual' 'diferente' 'mayorigual' 'mayor'
-%left 'mas' 'menos' 'true' 'false' 
-%left 'incremento' 'reduccion'
 %left uMenos
 %left 'parentesisaper' 'parentesiscierre' 
 
@@ -151,7 +143,7 @@ INI
 INSTRUCCIONES
 	: INSTRUCCIONES INSTRUCCION  {$$ = $1; $$.push($2);}
 	| INSTRUCCION  {$$ = [$1];}
-	| error  { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+	| error INSTRUCCION { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
 			  reportes.putError({lexema:yytext, fila: this._$.first_line, columna:this._$.first_column, tipo: "SINTACTICO" })
 			}	
 ;
@@ -161,13 +153,13 @@ INSTRUCCION
 	| DECLARACION_FUNCION 			{$$ = $1 + "\n";}
 	| DECLARACION_METODO 			{$$ = $1 + "\n";}
 	| ASIGNACIONVAR puntocoma 		{$$ = $1;}
-	| IF_INS						{$$ = $1;}
+	| IF_INS							{$$ = $1;}
 	| SWITCH      					{$$ = $1;}
 	| FOR  							{$$ = $1;}
 	| WHILE  						{$$ = $1;}
 	| PRINT puntocoma 				{$$ = $1;}
 	| RETURN puntocoma 				{$$ = $1;}
-	| BREAK  				{$$ = $1;}
+	| BREAK puntocoma 				{$$ = $1;}
 	| CONTINUE puntocoma			{$$ = $1;}
 ;
 
@@ -195,71 +187,66 @@ DECLARACION_METODO
 // if
 IF_INS
  : INS_IF {$$ = $1}
- | INS_IF MULTI_ELSE {$$ = $1 + $2}
+ //| INS_IF MULTI_ELSE {$$ = $1 + $2}
  ;
 
- INS_IF 
- : if_sen parentesisaper EXPRESION parentesiscierre llaveaper  INSTRUCCIONES  llavecierre {$$ = traducir.sentenciaIf($3, $6); console.log("terminando if", $3);}
- ;
+//  INS_IF 
+//  : if parentesisaper EXPRESION parentesiscierre llaveaper  INSTRUCCIONES  llavecierre {$$ = traducir.sentenciaIf($3, $6); console.log("terminando if", $1);}
+//  ;
 
 
-MULTI_ELSE 
- : MULTI_ELSE ELSE { $$ = $1 + $2}
- | ELSE 		   { $$ = $1}
- ;
+//MULTI_ELSE 
+ //: MULTI_ELSE ELSE { $$ = $1 + $2}
+ //| ELSE 		   { $$ = $1}
+ //;
 
- ELSE
- : else llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "else:");}
-| else if llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "elif:");}
- ;
+ //ELSE
+ //: else llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "else:");}
+// | else if llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaElse($3, "elif:");}
+ //;
 
  // switch 
 SWITCH 
-//: default dospuntos  {$$ = $1; console.log("terminando case")}
-//: 	SWITCHCASES {$$ = $1}
-: switch parentesisaper EXPRESION parentesiscierre llaveaper SWITCHCASES {$$ = traducir.sentenciaSwitch() + $6}
-//: switch parentesisaper EXPRESION parentesiscierre llaveaper  { console.log("terminando switch", $3)}
-// $$ = traducir.sentenciaSwitch() + $6;  id igual EXPRESION puntocoma break 
+: switch parentesisaper EXPRESION parentesiscierre llaveaper SWITCHCASES llavecierre {$$ = traducir.sentenciaSwitch() + $6}
 ;
 
 SWITCHCASES  
-//: CASES llavecierre{$$ = $1}
 : CASES DEFAULT {$$ = $1 + $2}
+| CASES  { $$ = $1}
+| DEFAULT { $$ = $1}
 ;
 
 CASES 
-: CASES CASE {$$ = $1 + $2; console.log("terminando switch", $2)}
-| CASE {$$ = $1; console.log("terminando case", $1)}
+: CASES CASE {$$ = $1 + $2}
+| CASE {$$ = $1}
 ;
 
 CASE 
-: case entero dospuntos id igual EXPRESION puntocoma break puntocoma { $$ = traducir.casesParaSwitch($2, $4 , $6)}
+: case EXPRESION dospuntos id igual EXPRESION puntocoma break { $$ = traducir.casesParaSwitch($2, $4 , $6)}
 ;
 
 DEFAULT
-: default dospuntos INSTRUCCIONES llavecierre {$$ = $1}
+: default dospuntos INSTRUCCIONES {$$ = $1}
 ;
-
 //FOR
 FOR  
-//:for id incremento {$$ = $2 + $3}
-//for parentesisaper INICIOFOR puntocoma EXPRESION puntocoma ACTUALIZACION  {$$ = $1 + $2 + $3 + $4 + $5}
-:for parentesisaper TYPE id igual EXPRESION puntocoma EXPRESION_FOR puntocoma ACTUALIZACION parentesiscierre llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaFor($4, $6, $8, $13 )}
+:parentesisaper INICIOFOR puntocoma EXPRESION_FOR puntocoma ACTUALIZACIONFOR parentesiscierre llaveaper INSTRUCCIONES llavecierre {$$ = traducir.sentenciaFor($2, $4, $9 )}
 ;
 
 
 INICIOFOR  
-: TYPE id igual EXPRESION {$$  = $2}
+: TYPE id igual EXPRESION {$$  = $4}
 ;
 
 ACTUALIZACIONFOR 
-: EXPRESION puntocoma ACTUALIZACION { $$ = $1 + $2 + $3} 
+: ACTUALIZACION { $$ = $1}
+| ASIGNACIONVAR { $$ = $1 } 
 ;
 
 
 ACTUALIZACION 
-: id incremento { $$ = $1 + $2 }
-| id reduccion { $$ = $1 + $2 }
+: id masmas { $$ = $1 + $2 }
+| id menosmenos { $$ = $1 + $2 }
 ;
 //WHILE 
 
@@ -311,20 +298,20 @@ EXPRESION
 	| EXPRESION menos EXPRESION     { $$ = $1 + " - " + $3 }
 	| EXPRESION por EXPRESION       { $$ = $1 + " * " + $3}
 	| EXPRESION dividido EXPRESION  { $$ = + $1 + " / " + $3 }
-	| EXPRESION and EXPRESION 	    { $$ =  $1 + "&&" + $3; }
-	| EXPRESION or EXPRESION  		  { $$ =  $1 + " || " + $3; }
-	| EXPRESION menor EXPRESION 	  { $$ = $1 + " < " + $3; }
-	| EXPRESION menorigual EXPRESION  { $$ = $1 + " <= " + $3 }
-	| EXPRESION mayor EXPRESION  	  { $$ =  $1  + " > " + $3 }
-	| EXPRESION mayorigual EXPRESION  { $$ = $1 + " >= " + $3 }
-	| EXPRESION igualigual EXPRESION  { $$ = $1 + " == " + $3}
+	| EXPRESION and EXPRESION  { $$ = + $1 + "&&" + $3; }
+	| EXPRESION or EXPRESION  { $$ = + $1 + " || " + $3; }
+	| EXPRESION menor EXPRESION  { $$ = + $1 + " < " + $3; }
+	| EXPRESION menorigual EXPRESION  { $$ = + $1 + " <= " + $3 }
+	| EXPRESION mayor EXPRESION  { $$ = + $1 + " > " + $3 }
+	| EXPRESION mayorigual EXPRESION  { $$ = + $1 + " >= " + $3 }
+	| EXPRESION igualigual EXPRESION  { $$ = + $1 + " == " + $3}
 	| cadena						{ $$ = '"' + $1 + '"' }
-	| entero                        { $$ = $1; }
-	| decimal                       { $$ = $1}
+	| entero                        { $$ = Number($1); }
+	| decimal                       { $$ = Number($1)}
 	| true							{ $$ = $1 }
 	| false							{ $$ = $1; }
 	| caracter 						{$$ = "'" + $1 + "'" }
-	| id 							{$$ = $1; console.log("identificador", $1);}
+	| parentesisaper EXPRESION parentesiscierre       { $$ = $2 }
 ;
 
 TYPE
@@ -337,23 +324,16 @@ TYPE
 
 
 EXPRESION_FOR 
-	: menos EXPRESION %prec uMenos  { $$ = $2 *-1 }
-	| EXPRESION_FOR mas EXPRESION_FOR       { $$ =  $3; }
-	| EXPRESION_FOR menos EXPRESION_FOR     { $$ =  $3; }
-	| EXPRESION_FOR por EXPRESION_FOR       { $$ =  $3; }
-	| EXPRESION_FOR dividido EXPRESION_FOR  { $$ = + $1 + " / " + $3 }
-	| EXPRESION_FOR and EXPRESION_FOR 	    { $$ =  $1 + "&&" + $3; }
-	| EXPRESION_FOR or EXPRESION _FOR 		  { $$ =  $1 + " || " + $3; }
-	| EXPRESION_FOR menor EXPRESION_FOR 	 { $$ =  $3; }
-	| EXPRESION_FOR menorigual EXPRESION_FOR  { $$ =  $3; }
-	| EXPRESION_FOR mayor EXPRESION_FOR  	  { $$ =  $3; }
-	| EXPRESION_FOR mayorigual EXPRESION_FOR  { $$ =  $3; }
-	| EXPRESION_FOR igualigual EXPRESION_FOR  { $$ =  $3; }
-	| cadena						{ $$ = '"' + $1 + '"' }
-	| entero                        { $$ = $1; }
-	| decimal                       { $$ = $1}
+	: menos EXPRESION_FOR %prec uMenos  { $$ = $2 *-1; }
+	| EXPRESION_FOR menor EXPRESION_FOR       { $$ =  $3; }
+	| EXPRESION_FOR menorigual EXPRESION_FOR       { $$ =  $3; }
+	| EXPRESION_FOR mayor EXPRESION_FOR     { $$ =  $3; }
+	| EXPRESION_FOR mayorigual EXPRESION_FOR  { $$ = $3; }
+	| cadena						{ $$ = '"' + $1 + '"'; }
+	| entero                        { $$ = Number($1); }
+	| decimal                         { $$ = Number($1); }
 	| true							{ $$ = $1 }
 	| false							{ $$ = $1; }
-	| caracter 						{$$ = "'" + $1 + "'" }
-	| id 							{$$ = $1; console.log("identificador", $1);}
+	| caracter 						{$$ = "'" + $1 + "'"; }
+	| parentesisaper EXPRESION_FOR parentesiscierre       { $$ = $2; }
 ;

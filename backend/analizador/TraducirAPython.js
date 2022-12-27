@@ -1,5 +1,8 @@
 class TraducirAPython{
     constructor(){
+        this.numeroCasosSwitch = 0
+        this.casoSwitch = "";
+        this.contenidoPrint = "";
     }
 
     asignacionDeclaracion(id, igual, expresion){
@@ -15,7 +18,7 @@ class TraducirAPython{
 
     }
     sentenciaIf(expresion, instrucciones){
-        return "if " + expresion + ": +\n" + instrucciones 
+        return "if " + expresion + ": \n" + instrucciones 
  
     }
 
@@ -25,32 +28,52 @@ class TraducirAPython{
     }
 
     sentenciaSwitch(){
+        return `def switch(case,${this.casoSwitch}): + \n`
 
     }
 
-    casesParaSwitch(){
+    casesParaSwitch(numero,id, valor){
+        this.numeroCasosSwitch = numero
+        this.casoSwitch = id
+        return ` ${numero}: ${id} = ${valor},`
 
     }
 
-    defaultParSwitch(instrucciones){
-        return "default: \n"
+    defaultParaSwitch(instrucciones){
+        return `${this.numeroCasosSwitch + 1}: ${instrucciones} `
 
     }
 
-    sentenciaFor(){
+    sentenciaFor(variable, inicio, fin, instrucciones){
+        return `for ${variable} in range (${inicio}, ${fin}): \n ${instrucciones}`
+
+    } 
+
+    sentenciaWhile(isDoWhile, expresionDentroWhile, instrucciones, asignacionVar){
+        if(isDoWhile){
+            return ` ${asignacionVar} + \n + while True: + \n + ${instrucciones} + \n + if(${expresionDentroWhile}): + \n break `
+
+        }
+
+        return `while ${expresionDentroWhile}: + \n + ${instrucciones} `
 
     }
 
-    sentenciaWhile(){
+
+    almacenarContenidoPrint(cadena){
+        this.contenidoPrint += cadena
+    }
+
+    traducirPrint(cadena){
+        this.almacenarContenidoPrint(cadena)
+        return `print(${cadena})`
 
     }
 
-    traducirPrint(){
+    
 
-    }
-
-    almacenarContenidoPrint(){
-
+    getContenidoPrint(){
+        return this.contenidoPrint; 
     }
 }
 module.exports = TraducirAPython;

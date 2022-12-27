@@ -1,0 +1,93 @@
+.title {
+    background-color: #023047;
+    text-align: center;
+    color: #ffb703;
+   
+}
+.mona{
+    font-size: 20px;
+    text-align: center;
+    color: #ffb703;
+}
+button {
+    font-family: 'Varela Round', sans-serif;
+}
+
+.subtitulo {
+    font-family: 'Varela Round', sans-serif;
+    font-size: large;
+}
+.editor {
+    background-color: #023047;
+}
+.foot {
+    font-family: 'Varela Round', sans-serif;
+    color: #ffb703;
+}
+
+.codebox {
+    width: 500px;
+    height: 420px;
+}
+
+.fila {
+    height: 420px;
+}
+
+hr {
+    border-width: 0.13em;
+    border-color: gray;
+}
+
+.fc:first-letter{
+    text-transform: capitalize
+  }
+
+  .tab{ font-family: 'Jura', sans-serif; }
+  .tab .nav-tabs{ border: none; }
+  .tab .nav-tabs li a{
+      color: #ff4300;
+      background: transparent;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 11px 25px 8px;
+      margin: 0 5px 1px 0;
+      border: none;
+      border-radius: 30px 30px 0 0;
+      position: relative;
+      transition: all 0.3s ease-in-out;
+  }
+  .tab .nav-tabs li.active a,
+  .tab .nav-tabs li.active a:hover{
+      color: rgb(0, 250, 83);
+      background-color: #ff4300;
+      border: none;
+  }
+  .tab .nav-tabs li a:before{
+      content: '';
+      height: 70%;
+      width: 100%;
+      border: 2px solid #ff4300;
+      border-bottom: none;
+      border-radius: 30px 30px 0 0;
+      position: absolute;
+      left: 0;
+      top: 0;
+      transition: all 0.3s ease 0s;
+  }
+  .tab .nav-tabs li.active a:before,
+  .tab .nav-tabs li a:hover:before{
+      height: 100%;
+  }
+  .tab .tab-content{
+      color: #ff4300;
+      background-color: #ffb703;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      line-height: 25px;
+      padding: 25px 25px 20px;
+      border: 2px solid #ff4300;
+      border-radius: 0 0 30px 30px;
+  }

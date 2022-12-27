@@ -11,17 +11,17 @@ class Reportes {
         /**
          * lo usamos para instanciar y a la vez para limpiar
          *  */
-        this.errores_sintacticos = [];
+        this.errores = [];
         this.reporte_simbolos = [];
     }
 
     getErrores_sintacticos(){
-        return this.errores_sintacticos;
+        return this.errores;
     }
 
-    putError_sintactico(body){
-        body.tipo= tipo.SINTACTICO;
-        this.errores_sintacticos.push(body)
+    putError(body){
+        
+        this.errores.push(body)
     }
 
 
